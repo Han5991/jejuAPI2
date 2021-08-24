@@ -9,9 +9,20 @@ import org.json.XML;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathFactory;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -28,7 +39,7 @@ public class MainController {
     @PostMapping(value = "/test", headers = "Accept=application/json")
     public HashMap<String, Object> callAPI(@RequestBody Map<String, Object> params) throws Exception {
 
-        Map<String, Object> param = (Map<String, Object>) (((Map<?, ?>) params.get("action")).get("params"));
+        Map<String, Object> param = getParam(params);
 
         String ServiceKey = (String) param.get("ServiceKey");
         String cityCode = (String) param.get("cityCode");
@@ -41,8 +52,10 @@ public class MainController {
         Map<String, Object> items = (Map<String, Object>) body.get("items");
         List<HashMap<String, Object>> itemList = (List<HashMap<String, Object>>) items.get("item");
 
+        List<HashMap<String, Object>> itemList2 = xmlParser(getData(ServiceKey, cityCode, nodeId), "//items/item");
+
         String aaa = "";
-        for (HashMap<String, Object> result : itemList) {
+        for (HashMap<String, Object> result : itemList2) {
             aaa += result.get("arrtime");
         }
 
@@ -62,12 +75,48 @@ public class MainController {
         resultJson.put("version", "2.0");
         resultJson.put("template", template);
 
-        log.info(itemList);
         return resultJson;
     }
 
-    public String getData(String ServiceKey, String cityCode, String nodeId) throws Exception {
+    public String xmlToJson(String xml) {
+        JSONObject xmlJSONObj = XML.toJSONObject(xml);
+        return xmlJSONObj.toString(4);
+    }
 
+    public Map<String, Object> parseJsonToMap(String json) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(json, new TypeReference<>() {
+        });
+    }
+
+    public List<HashMap<String, Object>> xmlParser(String xml, String expression) throws Exception {
+
+        //DocumentBuilderFactory 생성
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        // xml 파싱하기
+        InputSource is = new InputSource(new StringReader(xml));
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document doc = builder.parse(is);
+        XPathFactory xpathFactory = XPathFactory.newInstance();
+        XPath xpath = xpathFactory.newXPath();
+        XPathExpression expr = xpath.compile(expression);
+        NodeList nodeList = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+
+        List<HashMap<String, Object>> itemList = new ArrayList<>();
+        HashMap<String, Object> item = new HashMap<>();
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            NodeList child = nodeList.item(i).getChildNodes();
+            for (int j = 0; j < child.getLength(); j++) {
+                Node node = child.item(j);
+                item.put(node.getNodeName(), node.getTextContent());
+            }
+            itemList.add(item);
+        }
+        return itemList;
+    }
+
+    public String getData(String ServiceKey, String cityCode, String nodeId) throws Exception {
         StringBuilder urlBuilder = new StringBuilder("http://openapi.tago.go.kr/openapi/service/ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList");
         urlBuilder.append("?" + URLEncoder.encode("ServiceKey", "UTF-8") + "=" + ServiceKey);
         String var10001 = URLEncoder.encode("cityCode", "UTF-8");
@@ -87,23 +136,12 @@ public class MainController {
         while ((line = rd.readLine()) != null) {
             sb.append(line);
         }
-
         rd.close();
         conn.disconnect();
         return sb.toString();
     }
 
-    public String xmlToJson(String xml) {
-        JSONObject xmlJSONObj = XML.toJSONObject(xml);
-        return xmlJSONObj.toString(4);
-    }
-
-    public Map<String, Object> parseJsonToMap(String json) throws JsonProcessingException {
-
-        ObjectMapper mapper = new ObjectMapper();
-
-        return mapper.readValue(json, new TypeReference<>() {
-        });
-
+    public Map<String, Object> getParam(Map<String, Object> params) {
+        return (Map<String, Object>) (((Map<?, ?>) params.get("action")).get("params"));
     }
 }
