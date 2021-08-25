@@ -3,6 +3,7 @@ package com.jeju.jejuapi2;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jeju.jejuapi2.response.*;
 import lombok.extern.log4j.Log4j2;
 import org.json.JSONObject;
 import org.json.XML;
@@ -38,8 +39,7 @@ public class MainController {
 
     //카카오톡 오픈빌더로 리턴할 스킬 API
     @PostMapping(value = "/test", headers = "Accept=application/json")
-    public HashMap<String, Object> callAPI(@RequestBody Map<String, Object> params) throws Exception {
-
+    public String callAPI(@RequestBody Map<String, Object> params) throws Exception {
         Map<String, Object> param = getParam(params);
 
         String station = (String) param.get("station");
@@ -70,109 +70,104 @@ public class MainController {
 
         HashMap<String, Object> resultJson = new HashMap<>();
 
-        List<HashMap<String, Object>> outputs = new ArrayList<>();
+        List<HashMap<?, ?>> templateOutputs = new ArrayList<>();
         HashMap<String, Object> template = new HashMap<>();
-        HashMap<String, Object> simpleText = new HashMap<>();
-        HashMap<String, Object> carousel = new HashMap<>();
-        HashMap<String, Object> type = new HashMap<>();
-        List<HashMap<String, Object>> items2 = new ArrayList<>();
+        HashMap<String, Object> templateOutputsSimpleText = new HashMap<>();
+        HashMap<String, Object> templateOutputsCarousel = new HashMap<>();
+
+        HashMap<String, Object> carouselInfo = new HashMap<>();
+        List<HashMap<?, ?>> carouselInfoItems = new ArrayList<>();
         HashMap<String, Object> imageTitle = new HashMap<>();
+        HashMap<String, Object> imageTitleInfo = new HashMap<>();
 
 
-        HashMap<String, Object> text = new HashMap<>();
+
+        HashMap<String, Object> itemList12 = new HashMap<>();
 
 
-        imageTitle.put("title", "버스 예정 도착 정보");
-        imageTitle.put("imageUrl", "https://t1.kakaocdn.net/openbuilder/docs_image/wine.jpg");
+        HashMap<String, Object> itemListIndex = new HashMap<>();
+        HashMap<String, Object> itemListAlignment = new HashMap<>();
+        itemListAlignment.put("itemListAlignment", "left");
+        List<HashMap<String, Object>> itemListInfo = new ArrayList<>();
 
-        text.put("text", resultTest);
-        simpleText.put("simpleText", text);
+        HashMap<String, Object> buttons = new HashMap<>();
+        List<HashMap<String, Object>> buttonsInfo = new ArrayList<>();
+        HashMap<String, Object> buttonInfo = new HashMap<>();
+        buttonInfo.put("label", "예약 정보");
+        buttonInfo.put("action", "message");
+        buttonInfo.put("messageText", "예약 정보");
+        buttonsInfo.add(buttonInfo);
+        buttons.put("buttons", buttonsInfo);
 
-        items2.add(imageTitle);
+        HashMap<String, Object> templateOutputsSimpleTextText = new HashMap<>();
+        templateOutputsSimpleTextText.put("text", resultTest);
+        templateOutputsSimpleText.put("simpleText", templateOutputsSimpleTextText);
 
-        type.put("type", "itemCard");
-        carousel.put("carousel", type);
-        carousel.put("items", items2);
+        imageTitleInfo.put("title", "버스 예정 도착 정보");
+        imageTitleInfo.put("imageUrl", "https://t1.kakaocdn.net/openbuilder/docs_image/wine.jpg");
 
-        outputs.add(carousel);
-        outputs.add(simpleText);
+        imageTitle.put("imageTitle",imageTitleInfo);
 
-        template.put("outputs", outputs);
+        itemListIndex.put("title", "매장명");
+        itemListIndex.put("description", "판교 A스퀘어점");
+        itemListInfo.add(itemListIndex);
+
+        itemList12.put("itemList", itemListInfo);
+
+        carouselInfoItems.add(imageTitle);
+        carouselInfoItems.add(itemList12);
+        carouselInfoItems.add(buttons);
+        carouselInfoItems.add(itemListAlignment);
+
+        carouselInfo.put("type", "itemCard");
+        carouselInfo.put("items", carouselInfoItems);
+
+        templateOutputsCarousel.put("carousel", carouselInfo);
+
+        templateOutputs.add(templateOutputsCarousel);
+        templateOutputs.add(templateOutputsSimpleText);
+
+        template.put("outputs", templateOutputs);
 
         resultJson.put("version", "2.0");
         resultJson.put("template", template);
 
-        log.info(resultJson);
-        return resultJson;
-    }
+        JSONObject json =  new JSONObject(resultJson);
 
-    @GetMapping(value = "/test", headers = "Accept=application/json")
-    public HashMap<String, Object> callAPI2(@RequestBody Map<String, Object> params) throws Exception {
+        log.info(json);
 
-        Map<String, Object> param = getParam(params);
+        SkillResponse result = new SkillResponse();
+        result.addCommerceCard(new CommerceCardBuilder()
+                .description("따끈따끈한 보물 상자 팝니다")
+                .price(10000)
+                .discount(1000)
+                .thumbnails(new ThumbnailBuilder()
+                        .imageUrl("http://k.kakaocdn.net/dn/83BvP/bl20duRC1Q1/lj3JUcmrzC53YIjNDkqbWK/i_6piz1p.jpg")
+                        .link(new LinkBuilder()
+                                .web("https://store.kakaofriends.com/kr/products/1542")
+                                .build())
+                        .build())
+                .profile(new ProfileBuilder()
+                        .imageUrl("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT4BJ9LU4Ikr_EvZLmijfcjzQKMRCJ2bO3A8SVKNuQ78zu2KOqM")
+                        .nickname("보물상자 팝니다")
+                        .build())
+                .buttons(new ButtonBuilder()
+                        .label("구매하기")
+                        .action(EnumResponseType.ButtonActionType.WEBLINK.getTypeText())
+                        .webLinkUrl("https://store.kakaofriends.com/kr/products/1542")
+                        .build())
+                .buttons(new ButtonBuilder()
+                        .label("전화하기")
+                        .action(EnumResponseType.ButtonActionType.PHONE.getTypeText())
+                        .phoneNumber("354-86-00070")
+                        .build())
+                .buttons(new ButtonBuilder()
+                        .label("공유하기")
+                        .action(EnumResponseType.ButtonActionType.SHARE.getTypeText())
+                        .build())
+                .build());
 
-        String station = (String) param.get("station");
-//        String cityCode = (String) param.get("cityCode");
-//        String nodeId = (String) param.get("nodeId");
-
-        String a = xmlToJson(getData(station));
-        Map<String, Object> pb = parseJsonToMap(a);
-        Map<String, Object> response = (Map<String, Object>) pb.get("response");
-        Map<String, Object> body = (Map<String, Object>) response.get("body");
-        Map<String, Object> items = (Map<String, Object>) body.get("items");
-        List<HashMap<String, Object>> itemList = (List<HashMap<String, Object>>) items.get("item");
-
-        List<HashMap<String, Object>> itemList2 = xmlParser(getData(station), "//items/item");
-
-        String result2 = "";
-        String resultTest = "";
-        for (HashMap<String, Object> result : itemList) {
-            int arrvVhId = (int) result.get("arrvVhId");
-            if (arrvVhId != 0) {
-                result2 += "버스 ID: " + arrvVhId;
-                result2 += " , 남은 정거장 수: " + result.get("leftStation");
-                result2 += " , " + result.get("predictTravTm") + "분 전" + "\n";
-                resultTest += result2;
-                result2 = "";
-            }
-        }
-
-        HashMap<String, Object> resultJson = new HashMap<>();
-
-        List<HashMap<String, Object>> outputs = new ArrayList<>();
-        HashMap<String, Object> template = new HashMap<>();
-        HashMap<String, Object> simpleText = new HashMap<>();
-        HashMap<String, Object> carousel = new HashMap<>();
-        HashMap<String, Object> type = new HashMap<>();
-        List<HashMap<String, Object>> items2 = new ArrayList<>();
-        HashMap<String, Object> imageTitle = new HashMap<>();
-
-
-        HashMap<String, Object> text = new HashMap<>();
-
-
-        imageTitle.put("title", "버스 예정 도착 정보");
-        imageTitle.put("imageUrl", "https://t1.kakaocdn.net/openbuilder/docs_image/wine.jpg");
-
-        text.put("text", resultTest);
-        simpleText.put("simpleText", text);
-
-        items2.add(imageTitle);
-
-        type.put("type", "itemCard");
-        carousel.put("carousel", type);
-        carousel.put("items", items2);
-
-        outputs.add(carousel);
-        outputs.add(simpleText);
-
-        template.put("outputs", outputs);
-
-        resultJson.put("version", "2.0");
-        resultJson.put("template", template);
-
-        log.info(resultJson);
-        return resultJson;
+        return result.getSkillPayload().toString();
     }
 
     public String xmlToJson(String xml) {
