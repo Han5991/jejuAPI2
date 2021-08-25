@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.log4j.Log4j2;
 import org.json.JSONObject;
 import org.json.XML;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -41,22 +42,30 @@ public class MainController {
 
         Map<String, Object> param = getParam(params);
 
-        String ServiceKey = (String) param.get("ServiceKey");
-        String cityCode = (String) param.get("cityCode");
-        String nodeId = (String) param.get("nodeId");
+        String station = (String) param.get("station");
+//        String cityCode = (String) param.get("cityCode");
+//        String nodeId = (String) param.get("nodeId");
 
-        String a = xmlToJson(getData(ServiceKey, cityCode, nodeId));
+        String a = xmlToJson(getData(station));
         Map<String, Object> pb = parseJsonToMap(a);
         Map<String, Object> response = (Map<String, Object>) pb.get("response");
         Map<String, Object> body = (Map<String, Object>) response.get("body");
         Map<String, Object> items = (Map<String, Object>) body.get("items");
         List<HashMap<String, Object>> itemList = (List<HashMap<String, Object>>) items.get("item");
 
-        List<HashMap<String, Object>> itemList2 = xmlParser(getData(ServiceKey, cityCode, nodeId), "//items/item");
+        List<HashMap<String, Object>> itemList2 = xmlParser(getData(station), "//items/item");
 
-        String aaa = "";
-        for (HashMap<String, Object> result : itemList2) {
-            aaa += result.get("arrtime");
+        String result2 = "";
+        String resultTest = "";
+        for (HashMap<String, Object> result : itemList) {
+            int arrvVhId = (int) result.get("arrvVhId");
+            if (arrvVhId != 0) {
+                result2 += "버스 ID: " + arrvVhId;
+                result2 += " , 남은 정거장 수: " + result.get("leftStation");
+                result2 += " , " + result.get("predictTravTm") + "분 전" + "\n";
+                resultTest += result2;
+                result2 = "";
+            }
         }
 
         HashMap<String, Object> resultJson = new HashMap<>();
@@ -64,10 +73,28 @@ public class MainController {
         List<HashMap<String, Object>> outputs = new ArrayList<>();
         HashMap<String, Object> template = new HashMap<>();
         HashMap<String, Object> simpleText = new HashMap<>();
+        HashMap<String, Object> carousel = new HashMap<>();
+        HashMap<String, Object> type = new HashMap<>();
+        List<HashMap<String, Object>> items2 = new ArrayList<>();
+        HashMap<String, Object> imageTitle = new HashMap<>();
+
+
         HashMap<String, Object> text = new HashMap<>();
 
-        text.put("text", aaa);
+
+        imageTitle.put("title", "버스 예정 도착 정보");
+        imageTitle.put("imageUrl", "https://t1.kakaocdn.net/openbuilder/docs_image/wine.jpg");
+
+        text.put("text", resultTest);
         simpleText.put("simpleText", text);
+
+        items2.add(imageTitle);
+
+        type.put("type", "itemCard");
+        carousel.put("carousel", type);
+        carousel.put("items", items2);
+
+        outputs.add(carousel);
         outputs.add(simpleText);
 
         template.put("outputs", outputs);
@@ -75,6 +102,76 @@ public class MainController {
         resultJson.put("version", "2.0");
         resultJson.put("template", template);
 
+        log.info(resultJson);
+        return resultJson;
+    }
+
+    @GetMapping(value = "/test", headers = "Accept=application/json")
+    public HashMap<String, Object> callAPI2(@RequestBody Map<String, Object> params) throws Exception {
+
+        Map<String, Object> param = getParam(params);
+
+        String station = (String) param.get("station");
+//        String cityCode = (String) param.get("cityCode");
+//        String nodeId = (String) param.get("nodeId");
+
+        String a = xmlToJson(getData(station));
+        Map<String, Object> pb = parseJsonToMap(a);
+        Map<String, Object> response = (Map<String, Object>) pb.get("response");
+        Map<String, Object> body = (Map<String, Object>) response.get("body");
+        Map<String, Object> items = (Map<String, Object>) body.get("items");
+        List<HashMap<String, Object>> itemList = (List<HashMap<String, Object>>) items.get("item");
+
+        List<HashMap<String, Object>> itemList2 = xmlParser(getData(station), "//items/item");
+
+        String result2 = "";
+        String resultTest = "";
+        for (HashMap<String, Object> result : itemList) {
+            int arrvVhId = (int) result.get("arrvVhId");
+            if (arrvVhId != 0) {
+                result2 += "버스 ID: " + arrvVhId;
+                result2 += " , 남은 정거장 수: " + result.get("leftStation");
+                result2 += " , " + result.get("predictTravTm") + "분 전" + "\n";
+                resultTest += result2;
+                result2 = "";
+            }
+        }
+
+        HashMap<String, Object> resultJson = new HashMap<>();
+
+        List<HashMap<String, Object>> outputs = new ArrayList<>();
+        HashMap<String, Object> template = new HashMap<>();
+        HashMap<String, Object> simpleText = new HashMap<>();
+        HashMap<String, Object> carousel = new HashMap<>();
+        HashMap<String, Object> type = new HashMap<>();
+        List<HashMap<String, Object>> items2 = new ArrayList<>();
+        HashMap<String, Object> imageTitle = new HashMap<>();
+
+
+        HashMap<String, Object> text = new HashMap<>();
+
+
+        imageTitle.put("title", "버스 예정 도착 정보");
+        imageTitle.put("imageUrl", "https://t1.kakaocdn.net/openbuilder/docs_image/wine.jpg");
+
+        text.put("text", resultTest);
+        simpleText.put("simpleText", text);
+
+        items2.add(imageTitle);
+
+        type.put("type", "itemCard");
+        carousel.put("carousel", type);
+        carousel.put("items", items2);
+
+        outputs.add(carousel);
+        outputs.add(simpleText);
+
+        template.put("outputs", outputs);
+
+        resultJson.put("version", "2.0");
+        resultJson.put("template", template);
+
+        log.info(resultJson);
         return resultJson;
     }
 
@@ -116,13 +213,13 @@ public class MainController {
         return itemList;
     }
 
-    public String getData(String ServiceKey, String cityCode, String nodeId) throws Exception {
-        StringBuilder urlBuilder = new StringBuilder("http://openapi.tago.go.kr/openapi/service/ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList");
-        urlBuilder.append("?" + URLEncoder.encode("ServiceKey", "UTF-8") + "=" + ServiceKey);
-        String var10001 = URLEncoder.encode("cityCode", "UTF-8");
-        urlBuilder.append("&" + var10001 + "=" + URLEncoder.encode(cityCode, "UTF-8"));
-        var10001 = URLEncoder.encode("nodeId", "UTF-8");
-        urlBuilder.append("&" + var10001 + "=" + URLEncoder.encode(nodeId, "UTF-8"));
+    public String getData(String station) throws Exception {
+        StringBuilder urlBuilder = new StringBuilder("http://busopen.jeju.go.kr/OpenAPI/service/bis/BusArrives");
+        urlBuilder.append("?" + URLEncoder.encode("station", "UTF-8") + "=" + station);
+//        String var10001 = URLEncoder.encode("cityCode", "UTF-8");
+//        urlBuilder.append("&" + var10001 + "=" + URLEncoder.encode(cityCode, "UTF-8"));
+//        var10001 = URLEncoder.encode("nodeId", "UTF-8");
+//        urlBuilder.append("&" + var10001 + "=" + URLEncoder.encode(nodeId, "UTF-8"));
         URL url = new URL(urlBuilder.toString());
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
