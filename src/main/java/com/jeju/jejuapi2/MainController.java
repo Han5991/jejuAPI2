@@ -68,73 +68,74 @@ public class MainController {
             }
         }
 
-        HashMap<String, Object> resultJson = new HashMap<>();
-
-        List<HashMap<?, ?>> templateOutputs = new ArrayList<>();
-        HashMap<String, Object> template = new HashMap<>();
-        HashMap<String, Object> templateOutputsSimpleText = new HashMap<>();
-        HashMap<String, Object> templateOutputsCarousel = new HashMap<>();
-
-        HashMap<String, Object> carouselInfo = new HashMap<>();
-        List<HashMap<?, ?>> carouselInfoItems = new ArrayList<>();
-        HashMap<String, Object> imageTitle = new HashMap<>();
-        HashMap<String, Object> imageTitleInfo = new HashMap<>();
-
-
-
-        HashMap<String, Object> itemList12 = new HashMap<>();
-
-
-        HashMap<String, Object> itemListIndex = new HashMap<>();
-        HashMap<String, Object> itemListAlignment = new HashMap<>();
-        itemListAlignment.put("itemListAlignment", "left");
-        List<HashMap<String, Object>> itemListInfo = new ArrayList<>();
-
-        HashMap<String, Object> buttons = new HashMap<>();
-        List<HashMap<String, Object>> buttonsInfo = new ArrayList<>();
-        HashMap<String, Object> buttonInfo = new HashMap<>();
-        buttonInfo.put("label", "예약 정보");
-        buttonInfo.put("action", "message");
-        buttonInfo.put("messageText", "예약 정보");
-        buttonsInfo.add(buttonInfo);
-        buttons.put("buttons", buttonsInfo);
-
-        HashMap<String, Object> templateOutputsSimpleTextText = new HashMap<>();
-        templateOutputsSimpleTextText.put("text", resultTest);
-        templateOutputsSimpleText.put("simpleText", templateOutputsSimpleTextText);
-
-        imageTitleInfo.put("title", "버스 예정 도착 정보");
-        imageTitleInfo.put("imageUrl", "https://t1.kakaocdn.net/openbuilder/docs_image/wine.jpg");
-
-        imageTitle.put("imageTitle",imageTitleInfo);
-
-        itemListIndex.put("title", "매장명");
-        itemListIndex.put("description", "판교 A스퀘어점");
-        itemListInfo.add(itemListIndex);
-
-        itemList12.put("itemList", itemListInfo);
-
-        carouselInfoItems.add(imageTitle);
-        carouselInfoItems.add(itemList12);
-        carouselInfoItems.add(buttons);
-        carouselInfoItems.add(itemListAlignment);
-
-        carouselInfo.put("type", "itemCard");
-        carouselInfo.put("items", carouselInfoItems);
-
-        templateOutputsCarousel.put("carousel", carouselInfo);
-
-        templateOutputs.add(templateOutputsCarousel);
-        templateOutputs.add(templateOutputsSimpleText);
-
-        template.put("outputs", templateOutputs);
-
-        resultJson.put("version", "2.0");
-        resultJson.put("template", template);
-
-        JSONObject json =  new JSONObject(resultJson);
-
-        log.info(json);
+//
+//        HashMap<String, Object> resultJson = new HashMap<>();
+//
+//        List<HashMap<?, ?>> templateOutputs = new ArrayList<>();
+//        HashMap<String, Object> template = new HashMap<>();
+//        HashMap<String, Object> templateOutputsSimpleText = new HashMap<>();
+//        HashMap<String, Object> templateOutputsCarousel = new HashMap<>();
+//
+//        HashMap<String, Object> carouselInfo = new HashMap<>();
+//        List<HashMap<?, ?>> carouselInfoItems = new ArrayList<>();
+//        HashMap<String, Object> imageTitle = new HashMap<>();
+//        HashMap<String, Object> imageTitleInfo = new HashMap<>();
+//
+//
+//
+//        HashMap<String, Object> itemList12 = new HashMap<>();
+//
+//
+//        HashMap<String, Object> itemListIndex = new HashMap<>();
+//        HashMap<String, Object> itemListAlignment = new HashMap<>();
+//        itemListAlignment.put("itemListAlignment", "left");
+//        List<HashMap<String, Object>> itemListInfo = new ArrayList<>();
+//
+//        HashMap<String, Object> buttons = new HashMap<>();
+//        List<HashMap<String, Object>> buttonsInfo = new ArrayList<>();
+//        HashMap<String, Object> buttonInfo = new HashMap<>();
+//        buttonInfo.put("label", "예약 정보");
+//        buttonInfo.put("action", "message");
+//        buttonInfo.put("messageText", "예약 정보");
+//        buttonsInfo.add(buttonInfo);
+//        buttons.put("buttons", buttonsInfo);
+//
+//        HashMap<String, Object> templateOutputsSimpleTextText = new HashMap<>();
+//        templateOutputsSimpleTextText.put("text", resultTest);
+//        templateOutputsSimpleText.put("simpleText", templateOutputsSimpleTextText);
+//
+//        imageTitleInfo.put("title", "버스 예정 도착 정보");
+//        imageTitleInfo.put("imageUrl", "https://t1.kakaocdn.net/openbuilder/docs_image/wine.jpg");
+//
+//        imageTitle.put("imageTitle",imageTitleInfo);
+//
+//        itemListIndex.put("title", "매장명");
+//        itemListIndex.put("description", "판교 A스퀘어점");
+//        itemListInfo.add(itemListIndex);
+//
+//        itemList12.put("itemList", itemListInfo);
+//
+//        carouselInfoItems.add(imageTitle);
+//        carouselInfoItems.add(itemList12);
+//        carouselInfoItems.add(buttons);
+//        carouselInfoItems.add(itemListAlignment);
+//
+//        carouselInfo.put("type", "itemCard");
+//        carouselInfo.put("items", carouselInfoItems);
+//
+//        templateOutputsCarousel.put("carousel", carouselInfo);
+//
+//        templateOutputs.add(templateOutputsCarousel);
+//        templateOutputs.add(templateOutputsSimpleText);
+//
+//        template.put("outputs", templateOutputs);
+//
+//        resultJson.put("version", "2.0");
+//        resultJson.put("template", template);
+//
+//        JSONObject json =  new JSONObject(resultJson);
+//
+//        log.info(json);
 
         SkillResponse result = new SkillResponse();
         result.addCommerceCard(new CommerceCardBuilder()
